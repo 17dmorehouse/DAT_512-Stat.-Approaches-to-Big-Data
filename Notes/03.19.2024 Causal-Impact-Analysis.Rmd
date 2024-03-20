@@ -1,0 +1,61 @@
+---
+title: "Causal Impact Analysis"
+author: "Devan Morehouse"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+# Causal Impact Analysis
+
+
+Data Collection
+```{r}
+options(warn = -1)
+#install.packages("tseries")
+library(tseries)
+#install.packages("ggplot2")
+library(ggplot2)
+#devtools::install_github("google/CausalImpact")
+library(CausalImpact)
+```
+
+```{r}
+start = "2011-01-03"
+  end = "2017-03-20"
+quote = "AdjClose"
+VolksWagen <- get.hist.quote(instrument = "VOW.DE", start, end, quote, compression = "w")
+BMW <- get.hist.quote(instrument = "BMW.DE", start, end, quote, compression = "w")
+Allianz <- get.hist.quote(instrument = "ALV.DE", start, end, quote, compression = "w")
+series <- cbind(VolksWagen, BMW, Allianz)
+```
+```{r}
+colnames(series) <- c("VolksWagen", "BMW", "Allianz")
+autoplot(series, facet = NULL) + xlab("") + ylab("Adjusted Close Price")
+```
+```{r}
+pre.period <- as.Date(c(start, "2015-09-14"))
+post.period <- as.Date(c("2015-09-21", end))
+```
+
+```{r}
+impact_vw <- CausalImpact(series[, 1], pre.period, post.period, model.args = list(niter = 1000, nseasons = 52))
+plot(impact_vw)
+
+```
+
+```{r}
+summary(impact_vw)
+```
+
+```{r}
+impact_vw_reg <- CausalImpact(series, pre.period, post.period, model.args = list(niter = 1000, nseasons = 52))
+plot(impact_vw_reg)
+```
+
+```{r}
+summary(impact_vw_reg)
+
+```
+
+
+
